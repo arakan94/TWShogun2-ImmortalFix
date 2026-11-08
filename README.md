@@ -8,12 +8,33 @@ A small command-line tool for **Total War: Shogun 2** save games and `startpos.e
 
 It was built for the *Last Alliance* mod, where immortal heroes whose faction is wiped out can crash the game. It works on any Shogun 2 save or startpos that uses the same file layout (see [Limitations](#limitations)).
 
-## Requirements
+## Download
+
+Ready-to-run Windows builds are on the [Releases page](../../releases/latest). You don't need to install .NET or anything else.
+
+1. Download `ShogunImmortal-<version>-win-x64.zip` from the latest release.
+2. Extract it anywhere, for example `C:\Tools\ShogunImmortal`.
+3. Open a terminal (PowerShell or Command Prompt) in that folder. In File Explorer, type `powershell` in the address bar and press Enter.
+4. Run a command, for example:
+
+```
+.\ShogunImmortal.exe list "C:\path\to\Kingdom of Lindon.save" --immortal
+```
+
+The tool is command-line only, so double-clicking the exe just opens and closes a window. See [Common tasks](#common-tasks) and [Commands](#commands) for what you can run. In the examples below, replace `dotnet run -c Release --` with `.\ShogunImmortal.exe`.
+
+If Windows SmartScreen warns about an unrecognised app, choose **More info → Run anyway**. The exe isn't code-signed.
+
+## Building from source
+
+Skip this section if you use the release download.
+
+### Requirements
 
 - [.NET 9 SDK](https://dotnet.microsoft.com/download)
 - The [LZMA-SDK](https://www.nuget.org/packages/LZMA-SDK) NuGet package, which is restored automatically on first build
 
-## Running
+### Running
 
 From this folder:
 
@@ -27,6 +48,8 @@ or build once and use the executable:
 dotnet build -c Release
 bin\Release\net9.0\ShogunImmortal.exe <command> <file> [options]
 ```
+
+## Save files and safety
 
 Save games are normally in `%APPDATA%\The Creative Assembly\Shogun2\save_games`.
 
