@@ -159,6 +159,46 @@ Before editing, `repair` checks that re-writing the unmodified data reproduces i
 
 To avoid the problem, make immortal characters of minor factions mortal, for example with `mortal --immortal --not-faction …`. The fix that doesn't depend on timing is clearing the flag before their faction dies.
 
+## Tests
+
+The tests in `tests/ShogunImmortal.Tests` build small synthetic saves in code, so they need no game files:
+
+```
+dotnet test tests\ShogunImmortal.Tests
+```
+
+They cover:
+
+- **The file format.** An unmodified file is rewritten byte for byte, including padded varints. Removing nodes recomputes sizes. Bad files are rejected. Compact integers and integer arrays of every width decode with the right sign.
+- **The immortal flag.** It is read in both bool encodings and patched in place. Other `CHARACTER` versions and unexpected layouts are refused.
+- **The save container.** Recompression is checked, including the stored size after a restructuring edit in each of its encodings (4, 3 and 2 bytes), and a size too big for its field is refused.
+- **`repair`.** Orphans with zeroed handles are removed along with every reference to them. Live-handle orphans and clean saves are left alone. Shortened lists are re-encoded in their original array type, byte-identical to an independent encoder.
+- **The command line.** This covers filters, default output names and refusing to overwrite the input under any spelling. It also checks that failed writes and unreadable inputs (missing, a folder, locked by another program) give no stack trace, and that no `.tmp` files are left.
+
+One real save is included as a regression fixture: `Fixtures/Kingdom of Lindon corrupted.save`, the save that crashed after Saphrax's army was destroyed.
+
+- The test checks that `repair` removes exactly his leftovers (character 2130402496, AI component 50473) and leaves 735 AI characters for 735 world characters.
+- It also checks that the repaired campaign data is byte-identical to the repaired save that was confirmed to work in-game.
+
+This fixture makes the suite take about 25 seconds.
+
+A few more tests run against real game files when you point them at them, and are skipped otherwise:
+
+```
+$env:SHOGUN_TEST_SAVES = "$env:APPDATA\The Creative Assembly\Shogun2\save_games"
+$env:SHOGUN_ASSEMBLY_KIT = "C:\...\Total War SHOGUN 2\assembly_kit"
+$env:SHOGUN_TEST_STARTPOS = "C:\...\campaigns\jap_shogun\startpos.esf"
+dotnet test tests\ShogunImmortal.Tests
+```
+
+Use full paths. The tests run from their build output folder, so a relative path would point somewhere else. If a variable is set but its file or folder isn't found, the tests that need it fail with a message naming the path, rather than being skipped.
+
+Without a mod startpos extracted, the Assembly Kit's `working_data\campaigns\jap_shogun\startpos.esf` works too: it's compressed the same way.
+
+- **Saves** (every `.save` in the folder): each file is rewritten byte for byte, every character's immortal flag can be read, and `repair` leaves no orphans or references behind.
+- **Mod startpos** (a compressed `startpos.esf`): the file and its campaign data are rewritten byte for byte, and clearing every character's flag survives recompression, which is what `mortal` does to a startpos.
+- **Assembly Kit:** this re-checks the immortal flag mapping. Only Motochika is immortal in `tut_shogun`, and nobody is in `jap_shogun`.
+
 ## Limitations
 
 - Only the `0xABCA` encoding can be written; `0xABCF` files can only be read.
